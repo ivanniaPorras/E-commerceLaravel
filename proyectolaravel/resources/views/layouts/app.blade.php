@@ -33,7 +33,8 @@
                     <li class="nav-item"><a class="nav-link" href="#">Productos</a></li>
                 </ul>
                 <div class="d-flex">
-                    <a href="{{ route('carrito.index') }}" class="btn btn-success">Carrito</a>
+                    <a class="btn btn-success ms-2" href="{{ route('carrito.index') }}">Carrito</a>
+
                 </div>
             </div>
         </div>
