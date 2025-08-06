@@ -2,31 +2,29 @@
 
 @section('content')
 
-    <section class="text-center py-5" style="background-color: #f4f9f5;">
-        <div class="container">
-            <h2 class="display-4 fw-bold text-dark">100% Vegetales Orgánicos</h2>
-            <p class="text-muted mb-4">La Mejor Manera de Llenar tu Billetera.</p>
-            <p class="text-muted mb-5">Inicia tu Día con Ingredientes Frescos.</p>
+<section class="text-center py-5" style="background-color: #f4f9f5;">
+    <div class="container">
+        <h2 class="display-4 fw-bold text-dark">100% Vegetales Orgánicos</h2>
+        <p class="text-muted mb-4">La Mejor Manera de Llenar tu Billetera.</p>
+        <p class="text-muted mb-5">Inicia tu Día con Ingredientes Frescos.</p>
 
-
-            <div class="mb-4">
-                <span class="badge bg-success me-2">Compra</span>
-                <span class="badge bg-success me-2">Recetas</span>
-                <span class="badge bg-success me-2">Cocina</span>
-                <span class="badge bg-success me-2">Ingredientes</span>
-                <span class="badge bg-success me-2">Comida</span>
-            </div>
-
-            <div class="d-flex justify-content-center">
-                <input type="email" class="form-control me-2" placeholder="Buscar" style="max-width: 400px;">
-                <button type="submit" class="btn btn-success">Buscar</button>
-            </div>
+        <div class="mb-4">
+            <span class="badge bg-success me-2">Compra</span>
+            <span class="badge bg-success me-2">Recetas</span>
+            <span class="badge bg-success me-2">Cocina</span>
+            <span class="badge bg-success me-2">Ingredientes</span>
+            <span class="badge bg-success me-2">Comida</span>
         </div>
-    </section>
 
-    <section class="container my-5">
+        <div class="d-flex justify-content-center">
+            <input type="email" class="form-control me-2" placeholder="Buscar" style="max-width: 400px;">
+            <button type="submit" class="btn btn-success">Buscar</button>
+        </div>
+    </div>
+</section>
+
+<section class="container my-5">
     <div class="row text-center">
-
         <div class="col-md-4 mb-4">
             <div class="card border-0 shadow-sm rounded h-100" style="background-color: #f1f8e9;">
                 <div class="card-body d-flex flex-column">
@@ -36,7 +34,6 @@
                 </div>
             </div>
         </div>
-
 
         <div class="col-md-4 mb-4">
             <div class="card border-0 shadow-sm rounded h-100" style="background-color: #fce4ec;">
@@ -60,28 +57,28 @@
     </div>
 </section>
 
-
-    <section id="productos" class="container my-5">
-        <h2 class="text-center mb-4 primary-green">Productos Populares</h2>
-        <div class="row row-cols-1 row-cols-md-3 g-4">
-            <div class="col">
-                <div class="card">
-                    <div class="card-body">
-                        <h5 class="card-title">Producto 1</h5>
-                        <p class="card-text">Descripción del producto.</p>
-                        <p class="card-text">Precio: $10.00</p>
-                        <a href="#" class="btn btn-primary">Añadir al carrito</a>
-                    </div>
+<section id="productos" class="container my-5">
+    <h2 class="text-center mb-4 primary-green">Productos Populares</h2>
+    <div class="row row-cols-1 row-cols-md-3 g-4">
+        <div class="col">
+            <div class="card">
+                <div class="card-body">
+                    <h5 class="card-title">Producto 1</h5>
+                    <p class="card-text">Descripción del producto.</p>
+                    <p class="card-text">Precio: $10.00</p>
+                    <form action="{{ route('carrito.agregar', 1) }}" method="POST">
+                        @csrf
+                        <button type="submit" class="btn btn-primary">Añadir al carrito</button>
+                    </form>
                 </div>
             </div>
-            <!-- Aquí hay que poner el resto de las cards-->
         </div>
-    </section>
-
+        <!-- Aquí debes poner más productos según tu lógica -->
+    </div>
+</section>
 
 <section class="container my-5">
     <div class="row text-center">
-
         <div class="col-md-3 mb-4">
             <div class="card border-0 shadow-sm rounded-3 h-100" style="background-color: #f9f9f9; transition: transform 0.3s ease-in-out;">
                 <div class="card-body d-flex flex-column align-items-center p-4">
@@ -91,7 +88,6 @@
                 </div>
             </div>
         </div>
-
 
         <div class="col-md-3 mb-4">
             <div class="card border-0 shadow-sm rounded-3 h-100" style="background-color: #f9f9f9; transition: transform 0.3s ease-in-out;">
@@ -125,7 +121,4 @@
     </div>
 </section>
 
-
-
-    
 @endsection
