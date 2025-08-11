@@ -1,4 +1,4 @@
-@extends('layouts.app')
+@extends('layouts.public')
 
 @section('content')
 
@@ -17,8 +17,8 @@
         </div>
 
         <div class="d-flex justify-content-center">
-            <input type="email" class="form-control me-2" placeholder="Buscar" style="max-width: 400px;">
-            <button type="submit" class="btn btn-success">Buscar</button>
+            <input type="text" class="form-control me-2" placeholder="Buscar" style="max-width: 400px;">
+            <button type="button" class="btn btn-success">Buscar</button>
         </div>
     </div>
 </section>
@@ -59,23 +59,184 @@
 
 <section id="productos" class="container my-5">
     <h2 class="text-center mb-4 primary-green">Productos Populares</h2>
-    <div class="row row-cols-1 row-cols-md-3 g-4">
-        <div class="col">
-            <div class="card">
-                <div class="card-body">
-                    <h5 class="card-title">Producto 1</h5>
-                    <p class="card-text">Descripción del producto.</p>
-                    <p class="card-text">Precio: $10.00</p>
-                    <form action="{{ route('carrito.agregar', 1) }}" method="POST">
-                        @csrf
-                        <button type="submit" class="btn btn-primary">Añadir al carrito</button>
-                    </form>
+
+    {{-- Filtros --}}
+    <div class="card mb-4">
+        <div class="card-body">
+            <form class="row g-3 align-items-end" id="filters-form" onsubmit="return false;">
+                <div class="col-md-4">
+                    <label class="form-label">Buscar por nombre</label>
+                    <input type="text" class="form-control" id="filter-name" placeholder="Ej: miel, granola, matcha">
                 </div>
+                <div class="col-md-4">
+                    <label class="form-label">Categoría</label>
+                    <select id="filter-category" class="form-select">
+                        <option value="">Todas</option>
+                        <option>Endulzantes</option>
+                        <option>Aceites</option>
+                        <option>Granos</option>
+                        <option>Cereales</option>
+                        <option>Bebidas</option>
+                        <option>Tés</option>
+                        <option>Harinas</option>
+                        <option>Bebidas Vegetales</option>
+                        <option>Snacks</option>
+                        <option>Suplementos</option>
+                        <option>Semillas</option>
+                    </select>
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label">Precio (CRC)</label>
+                    <div class="d-flex gap-2">
+                        <input type="number" step="1" min="0" class="form-control" id="filter-min" placeholder="Mín">
+                        <input type="number" step="1" min="0" class="form-control" id="filter-max" placeholder="Máx">
+                    </div>
+                </div>
+                <div class="col-12 d-flex gap-2">
+                    <button class="btn btn-success" id="btn-apply">Aplicar filtros</button>
+                    <button class="btn btn-outline-secondary" id="btn-reset">Limpiar</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    {{-- Productos --}}
+<div id="products-grid" class="row row-cols-1 row-cols-md-3 g-4">
+
+    {{-- Producto 1 --}}
+    <div class="col">
+        <div class="card product-card" data-name="miel organica pura" data-category="Endulzantes" data-price="6600">
+            <img src="{{ asset('storage/ProductoMiel.png') }}" alt="Miel Orgánica" class="card-img-top" style="height:180px; object-fit:contain;">
+            <div class="card-body">
+                <h5 class="card-title">Miel Orgánica Pura</h5>
+                <p class="card-text">Endulzante natural sin aditivos, rica en antioxidantes.</p>
+                <p class="card-text"><strong>Precio:</strong> ₡6,600</p>
+                <span class="badge bg-success">Endulzantes</span>
             </div>
         </div>
-        <!-- Aquí debes poner más productos según tu lógica -->
     </div>
+
+    {{-- Producto 2 --}}
+    <div class="col">
+        <div class="card product-card" data-name="aceite de coco virgen" data-category="Aceites" data-price="5200">
+            <img src="{{ asset('storage/ProductoAceiteCoco.png') }}" alt="Aceite de Coco" class="card-img-top" style="height:180px; object-fit:contain;">
+            <div class="card-body">
+                <h5 class="card-title">Aceite de Coco Virgen</h5>
+                <p class="card-text">Prensado en frío, ideal para cocina y cuidado personal.</p>
+                <p class="card-text"><strong>Precio:</strong> ₡5,200</p>
+                <span class="badge bg-success">Aceites</span>
+            </div>
+        </div>
+    </div>
+
+    {{-- Producto 3 --}}
+    <div class="col">
+        <div class="card product-card" data-name="quinoa real" data-category="Granos" data-price="3550">
+            <img src="{{ asset('storage/ProductoQuinoa.png') }}" alt="Quinoa Real" class="card-img-top" style="height:180px; object-fit:contain;">
+            <div class="card-body">
+                <h5 class="card-title">Quinoa Real</h5>
+                <p class="card-text">Grano sin gluten, alto en proteína y fibra.</p>
+                <p class="card-text"><strong>Precio:</strong> ₡3,550</p>
+                <span class="badge bg-success">Granos</span>
+            </div>
+        </div>
+    </div>
+
+    {{-- Producto 4 --}}
+    <div class="col">
+        <div class="card product-card" data-name="granola sin azucar" data-category="Cereales" data-price="2850">
+            <img src="{{ asset('storage/ProductoGranola.png') }}" alt="Granola Sin Azúcar" class="card-img-top" style="height:180px; object-fit:contain;">
+            <div class="card-body">
+                <h5 class="card-title">Granola Full Extras</h5>
+                <p class="card-text">A base de avena, frutos secos y dátiles.</p>
+                <p class="card-text"><strong>Precio:</strong> ₡2,850</p>
+                <span class="badge bg-success">Cereales</span>
+            </div>
+        </div>
+    </div>
+
+    {{-- Producto 5 --}}
+    <div class="col">
+        <div class="card product-card" data-name="kombucha de jengibre" data-category="Bebidas" data-price="1700">
+            <img src="{{ asset('storage/ProductoKombucha.png') }}" alt="Kombucha de Jengibre" class="card-img-top" style="height:180px; object-fit:contain;">
+            <div class="card-body">
+                <h5 class="card-title">Kombucha de Jengibre</h5>
+                <p class="card-text">Bebida probiótica fermentada y refrescante.</p>
+                <p class="card-text"><strong>Precio:</strong> ₡1,700</p>
+                <span class="badge bg-success">Bebidas</span>
+            </div>
+        </div>
+    </div>
+
+    {{-- Producto 6 --}}
+    <div class="col">
+        <div class="card product-card" data-name="te verde matcha" data-category="Tés" data-price="7900">
+            <img src="{{ asset('storage/ProductoMatcha.png') }}" alt="Té Verde Matcha" class="card-img-top" style="height:180px; object-fit:contain;">
+            <div class="card-body">
+                <h5 class="card-title">Té Verde Matcha</h5>
+                <p class="card-text">Polvo fino, alto en antioxidantes y energía natural.</p>
+                <p class="card-text"><strong>Precio:</strong> ₡7,900</p>
+                <span class="badge bg-success">Tés</span>
+            </div>
+        </div>
+    </div>
+
+    {{-- Producto 7 --}}
+    <div class="col">
+        <div class="card product-card" data-name="harina de almendra" data-category="Harinas" data-price="4000">
+            <img src="{{ asset('storage/ProductoHarina.png') }}" alt="Harina de Almendra" class="card-img-top" style="height:180px; object-fit:contain;">
+            <div class="card-body">
+                <h5 class="card-title">Harina de Almendra</h5>
+                <p class="card-text">Alternativa sin gluten para repostería saludable.</p>
+                <p class="card-text"><strong>Precio:</strong> ₡4,000</p>
+                <span class="badge bg-success">Harinas</span>
+            </div>
+        </div>
+    </div>
+
+    {{-- Producto 8 --}}
+    <div class="col">
+        <div class="card product-card" data-name="leche de avena" data-category="Bebidas Vegetales" data-price="1550">
+            <img src="{{ asset('storage/ProductoLeche.png') }}" alt="Leche de Avena" class="card-img-top" style="height:180px; object-fit:contain;">
+            <div class="card-body">
+                <h5 class="card-title">Leche de Avena</h5>
+                <p class="card-text">Bebida vegetal cremosa y sin lactosa.</p>
+                <p class="card-text"><strong>Precio:</strong> ₡1,550</p>
+                <span class="badge bg-success">Bebidas Vegetales</span>
+            </div>
+        </div>
+    </div>
+
+    {{-- Producto 9 --}}
+    <div class="col">
+        <div class="card product-card" data-name="chips de kale" data-category="Snacks" data-price="2200">
+            <img src="{{ asset('storage/ProductoKale.png') }}" alt="Chips de Kale" class="card-img-top" style="height:180px; object-fit:contain;">
+            <div class="card-body">
+                <h5 class="card-title">Chips de Kale</h5>
+                <p class="card-text">Crujientes, horneadas y sazonadas naturalmente.</p>
+                <p class="card-text"><strong>Precio:</strong> ₡2,200</p>
+                <span class="badge bg-success">Snacks</span>
+            </div>
+        </div>
+    </div>
+
+    {{-- Producto 10 --}}
+    <div class="col">
+        <div class="card product-card" data-name="semillas de chia" data-category="Semillas" data-price="1900">
+            <img src="{{ asset('storage/ProductoChia.png') }}" alt="Semillas de Chía" class="card-img-top" style="height:180px; object-fit:contain;">
+            <div class="card-body">
+                <h5 class="card-title">Semillas de Chía</h5>
+                <p class="card-text">Ricas en omega-3 y fibra, perfectas para puddings.</p>
+                <p class="card-text"><strong>Precio:</strong> ₡1,900</p>
+                <span class="badge bg-success">Semillas</span>
+            </div>
+        </div>
+    </div>
+
+</div>
+
 </section>
+
 
 <section class="container my-5">
     <div class="row text-center">
