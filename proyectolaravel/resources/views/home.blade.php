@@ -310,6 +310,11 @@
                 </div>
             </div>
         </div>
+        <!-- Botón para redirigir a la página de pago -->
+        <div class="d-flex justify-content-center mt-5">
+            <a href="{{ url('pago') }}" class="btn btn-success">Ir a la Página de Pago</a>
+        </div>
+
     </div>
 </section>
 
