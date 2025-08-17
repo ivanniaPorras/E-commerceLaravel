@@ -6,7 +6,7 @@
     <title>Pasarela de Pago</title>
     <script src="https://js.stripe.com/v3/"></script>
     <style>
-        /*Estilos*/
+        /* Estilos */
         body {
             font-family: Arial, sans-serif;
             background-color: #f4f9f5;
@@ -88,14 +88,12 @@
             <div class="form-group">
                 <label for="card-element">Número de Tarjeta</label>
                 <input type="text" id="card-element" placeholder="Número de Tarjeta" required />
-                <div>   
-                </div>
             </div>
 
             <!-- Banco -->
             <div class="form-group">
                 <label for="bank">Banco</label>
-                <select id="bank">
+                <select id="bank" required>
                     <option value="">Selecciona un banco</option>
                     <option value="banco1">BCR</option>
                     <option value="banco2">Nacional</option>
@@ -117,12 +115,27 @@
 
             <div id="card-errors" role="alert"></div>
 
-            <button id="submit">Pagar</button>
+            <button type="button" id="submit" onclick="validarFormulario()">Pagar</button>
         </form>
     </div>
 
+    <script type="text/javascript">
+        // Función para validar los campos antes de redirigir
+        function validarFormulario() {
+            // Obtener los valores de los campos
+            var tarjeta = document.getElementById("card-element").value;
+            var banco = document.getElementById("bank").value;
+            var vencimiento = document.getElementById("expiry-date").value;
+            var cvv = document.getElementById("cvv").value;
 
-
+            // Validar que todos los campos estén completos
+            if (tarjeta && banco && vencimiento && cvv) {
+                window.location.href = "{{ url('factura') }}";
+            } else {
+                alert("Por favor, completa todos los campos.");
+            }
+        }
+    </script>
 
 </body>
 </html>
