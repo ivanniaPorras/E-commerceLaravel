@@ -4,7 +4,7 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use Stripe\Stripe;
-use Stripe\PaymentIntent; 
+use Stripe\PaymentIntent;  
 
 class PagoController extends Controller
 {
@@ -20,7 +20,7 @@ class PagoController extends Controller
 
         // Crear PaymentIntent
         $paymentIntent = PaymentIntent::create([  
-            'amount' => 1000,  
+            'amount' => 1000,  // Monto en centavos (ejemplo: $10)
             'currency' => 'usd',  // Moneda
             'metadata' => ['integration_check' => 'accept_a_payment'],
         ]);

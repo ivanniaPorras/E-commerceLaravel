@@ -10,6 +10,11 @@ Route::get('/pago', function() {
 }) ->name('pago');
 Route::get('/pago', [App\Http\Controllers\PagoController::class, 'index'])->name('pago.index');
 
+Route::get('/factura', function() {
+    return view('profile.factura'); 
+}) ->name('factura');
+Route::get('/factura', [App\Http\Controllers\FacturaController::class, 'index'])->name('factura.index');
+
 
 Route::get('/dashboard', function () {
     return view('dashboard');
