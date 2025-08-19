@@ -2,21 +2,23 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Carrito;
 use App\Models\Producto;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 
 class CarritoController extends Controller
 {
     // Mostrar el carrito
     public function index()
     {
-        // Obtener el carrito de la sesión
-        $carrito = session()->get('carrito', []);
+        // Obtener el carrito del usuario
+        $carrito = Carrito::with('productos')->where('user_id', Auth::id())->first(); // Usar Auth::id()
 
         // Calcular el total del carrito
         $total = 0;
-        foreach ($carrito as $item) {
-            $total += $item['precio'] * $item['cantidad'];
+        foreach ($carrito->productos as $item) {
+            $total += $item->pivot->cantidad * $item->precio;
         }
 
         // Calcular impuestos y envío
@@ -34,26 +36,24 @@ class CarritoController extends Controller
     public function agregar($id)
     {
         // Buscar el producto en la base de datos
-        $producto = Producto::find($id);
+        $producto = Producto::findOrFail($id);
 
-        // Obtener el carrito de la sesión
-        $carrito = session()->get('carrito', []);
+        // Obtener el carrito del usuario
+        $carrito = Carrito::where('user_id', Auth::id())->first(); // Usar Auth::id()
 
-        // Si el producto ya está en el carrito, aumentar la cantidad
-        if (isset($carrito[$id])) {
-            $carrito[$id]['cantidad']++;
-        } else {
-            // Si el producto no está en el carrito, agregarlo
-            $carrito[$id] = [
-                'nombre' => $producto->nombre,
-                'precio' => $producto->precio,
-                'cantidad' => 1,
-                'imagen_url' => $producto->imagen_url
-            ];
+        // Si el carrito no existe, crearlo
+        if (!$carrito) {
+            $carrito = Carrito::create(['user_id' => Auth::id()]);
         }
 
-        // Guardar el carrito actualizado en la sesión
-        session()->put('carrito', $carrito);
+        // Si el producto ya está en el carrito, aumentar la cantidad
+        $carritoProducto = $carrito->productos()->where('producto_id', $id)->first();
+        if ($carritoProducto) {
+            $carrito->productos()->updateExistingPivot($id, ['cantidad' => $carritoProducto->pivot->cantidad + 1]);
+        } else {
+            // Si el producto no está en el carrito, agregarlo
+            $carrito->productos()->attach($id, ['cantidad' => 1]);
+        }
 
         // Redirigir al carrito
         return redirect()->route('carrito.index');
@@ -62,13 +62,12 @@ class CarritoController extends Controller
     // Eliminar un producto del carrito
     public function eliminar($id)
     {
-        // Obtener el carrito de la sesión
-        $carrito = session()->get('carrito', []);
+        // Obtener el carrito del usuario
+        $carrito = Carrito::where('user_id', Auth::id())->first(); // Usar Auth::id()
 
-        // Si el producto está en el carrito, eliminarlo
-        if (isset($carrito[$id])) {
-            unset($carrito[$id]);
-            session()->put('carrito', $carrito); // Actualizar la sesión
+        // Si el carrito existe, eliminar el producto
+        if ($carrito) {
+            $carrito->productos()->detach($id);
         }
 
         // Redirigir al carrito
@@ -78,20 +77,25 @@ class CarritoController extends Controller
     // Actualizar la cantidad de un producto en el carrito
     public function actualizar(Request $request)
     {
-        // Obtener el carrito de la sesión
-        $carrito = session()->get('carrito', []);
+        // Obtener el carrito del usuario
+        $carrito = Carrito::where('user_id', Auth::id())->first(); // Usar Auth::id()
 
-        // Actualizar las cantidades de los productos
-        foreach ($request->cantidad as $id => $cantidad) {
-            if (isset($carrito[$id])) {
-                $carrito[$id]['cantidad'] = $cantidad;
+        // Si el carrito existe, actualizar las cantidades de los productos
+        if ($carrito) {
+            foreach ($request->cantidad as $id => $cantidad) {
+                // Asegurarse de que el producto esté en el carrito antes de actualizarlo
+                if ($carrito->productos()->where('producto_id', $id)->exists()) {
+                    $carrito->productos()->updateExistingPivot($id, ['cantidad' => $cantidad]);
+                }
             }
         }
 
-        // Guardar el carrito actualizado en la sesión
-        session()->put('carrito', $carrito);
-
         // Redirigir al carrito
         return redirect()->route('carrito.index');
+    }
+
+    public function checkout()
+    {
+        return view('checkout'); // Asegúrate de tener un archivo 'checkout.blade.php'
     }
 }

@@ -2,6 +2,9 @@
 
 use App\Http\Controllers\ProfileController;
 use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\CarritoController;
+use App\Http\Controllers\ProductoController;
+
 
 Route::get('/', fn() => view('home'));
 
@@ -28,3 +31,12 @@ Route::middleware('auth')->group(function () {
 });
 
 require __DIR__ . '/auth.php';
+Route::post('/carrito/agregar/{producto}', [CarritoController::class, 'agregar'])->name('carrito.agregar');
+Route::get('/carrito', [CarritoController::class, 'index'])->name('carrito.index');
+Route::get('/carrito/eliminar/{id}', [CarritoController::class, 'eliminar'])->name('carrito.eliminar');
+Route::post('/carrito/actualizar', [CarritoController::class, 'actualizar'])->name('carrito.actualizar');
+Route::get('/', [ProductoController::class, 'index']);
+Route::get('/checkout', [CarritoController::class, 'checkout'])->name('checkout');
+
+
+

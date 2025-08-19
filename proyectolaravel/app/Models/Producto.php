@@ -9,5 +9,11 @@ class Producto extends Model
 {
     use HasFactory;
 
-    protected $fillable = ['nombre', 'descripcion', 'precio', 'imagen_url', 'stock'];
+    protected $fillable = ['nombre', 'descripcion', 'precio', 'imagen_url'];
+
+    // Relación con los detalles del carrito
+    public function detallesCarrito()
+    {
+        return $this->hasMany(DetalleCarrito::class, 'producto_id');
+    }
 }
