@@ -18,6 +18,7 @@ return new class extends Migration
             $table->decimal('precio', 8, 2); // Precio del producto con 2 decimales
             $table->string('imagen_url'); // URL de la imagen del producto
             $table->integer('stock'); // Cantidad de stock disponible
+            $table->string('categoria'); // Agregar la columna 'categoria'
             $table->timestamps(); // Fechas de creación y actualización
         });
     }
