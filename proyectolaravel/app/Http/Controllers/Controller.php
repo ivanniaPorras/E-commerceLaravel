@@ -2,11 +2,14 @@
 
 namespace App\Http\Controllers;
 
-abstract class Controller
+use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
+use Illuminate\Foundation\Bus\DispatchesJobs;
+use Illuminate\Foundation\Validation\ValidatesRequests;
+use Illuminate\Routing\Controller as BaseController;
+
+class Controller extends BaseController
 {
-    public function index()
-    {
-        // Aquí puedes obtener los datos del carrito, usuario, o lo que sea necesario para el proceso de compra
-        return view('checkout'); // Esto cargará la vista 'checkout.blade.php'
-    }
+    use AuthorizesRequests, DispatchesJobs, ValidatesRequests;
+
+    // No debe haber un método index() aquí
 }
