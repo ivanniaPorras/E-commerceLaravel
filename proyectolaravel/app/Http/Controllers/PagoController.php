@@ -20,8 +20,8 @@ class PagoController extends Controller
 
         // Crear PaymentIntent
         $paymentIntent = PaymentIntent::create([  
-            'amount' => 1000,  // Monto en centavos (ejemplo: $10)
-            'currency' => 'usd',  // Moneda
+            'amount' => 1000,  
+            'currency' => 'usd',  
             'metadata' => ['integration_check' => 'accept_a_payment'],
         ]);
 

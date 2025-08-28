@@ -6,103 +6,81 @@
     <title>Factura de Compra</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.9.2/html2pdf.bundle.js"></script>
     <script>
-        
-        // Función para generar un ID de compra único que no se repita
-        function generateOrderId() {
-            const timestamp = Date.now(); 
-            const randomPart = Math.floor(Math.random() * 1000000000);
-            const uniqueId = `ORD-${timestamp}-${randomPart}`;
-            return uniqueId;
-        }
-
-        // Función para obtener la fecha de compra actual en formato adecuado
-        function getCurrentDate() {
-            const now = new Date();
-            const options = { year: 'numeric', month: 'long', day: 'numeric' };
-            return now.toLocaleDateString('es-ES', options); 
-        }
-
-        // Llenar la fecha de la compra y el ID de compra dinámicamente
-        window.onload = function() {
-            document.getElementById('order-id').textContent = generateOrderId(); 
-            document.getElementById('purchase-date').textContent = getCurrentDate(); 
-        };
-
-        // Función para generar el PDF cuando el botón es presionado
         function generatePDF() {
-            // Configuración de html2pdf.js
-            const element = document.getElementById('invoice-content'); // convertir a PDF
+            const element = document.getElementById('invoice-content');
             const opt = {
-                margin:       0.5,
-                filename:     'factura_compra.pdf',
-                image:        { type: 'jpeg', quality: 0.98 },
-                html2canvas:  { scale: 4 },
-                jsPDF:        { unit: 'in', format: 'letter', orientation: 'portrait' }
+                margin: 0.5,
+                filename: 'factura_compra.pdf',
+                image: { type: 'jpeg', quality: 0.98 },
+                html2canvas: { scale: 4 },
+                jsPDF: { unit: 'in', format: 'letter', orientation: 'portrait' }
             };
-            
-            // Generar el PDF usando html2pdf.js
             html2pdf().from(element).set(opt).save();
         }
     </script>
 
     <style>
         body {
-            font-family: Arial, sans-serif;
+            font-family: 'Arial', sans-serif;
             background-color: #f4f9f5;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            height: 100vh;
             margin: 0;
+            padding: 20px;
+            color: #333;
         }
 
         .invoice-container {
-            background-color: white;
-            padding: 30px;
+            background-color: #fff;
             border-radius: 10px;
             box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-            width: 100%;
-            max-width: 700px;
-            font-size: 14px;
-            text-align: center; 
+            padding: 30px;
+            max-width: 800px;
+            margin: 0 auto;
         }
 
         h2 {
             text-align: center;
-            color: #333;
+            color: #388e3c;
             margin-bottom: 20px;
-            font-size: 24px;
+            font-size: 26px;
         }
 
         .invoice-header {
-            text-align: center;
+            text-align: left;
+            border-bottom: 2px solid #ddd;
             margin-bottom: 20px;
-            border-bottom: 2px solid #ccc;
             padding-bottom: 10px;
         }
 
-        .invoice-details {
-            margin-top: 30px;
+        .invoice-details table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
         }
 
         .invoice-details th, .invoice-details td {
-            padding: 8px;
+            padding: 12px;
             text-align: left;
             border-bottom: 1px solid #ddd;
         }
 
         .invoice-details th {
-            background-color: #f0f0f0;
+            background-color: #81c784;
+            color: white;
+        }
+
+        .invoice-details td {
+            font-size: 16px;
         }
 
         .total-row {
             font-weight: bold;
+            background-color: #f0f0f0;
         }
 
         .footer {
             margin-top: 30px;
             text-align: center;
-            border-top: 2px solid #ccc;
+            border-top: 2px solid #ddd;
             padding-top: 10px;
         }
 
@@ -123,19 +101,20 @@
         }
 
         .export-button {
-            margin-top: 20px;
-            padding: 10px 20px;
+            display: block;
+            margin: 20px auto 0;
+            padding: 12px 20px;
             background-color: #4CAF50;
             color: white;
             border: none;
             border-radius: 5px;
             cursor: pointer;
+            font-size: 16px;
         }
 
         .export-button:hover {
-            background-color: #45a049;  
+            background-color: #45a049;
         }
-
     </style>
 </head>
 <body>
@@ -144,12 +123,12 @@
         <h2>Factura de Compra</h2>
         <div class="invoice-header">
             <h3>Compra Confirmada</h3>
-            <p><strong>ID de Compra:</strong> <span id="order-id">Cargando...</span></p>
-            <p><strong>Fecha de Compra:</strong> <span id="purchase-date">Cargando...</span></p>
+            <p><strong>ID de Compra:</strong> {{ $orderId }}</p>
+            <p><strong>Fecha de Compra:</strong> {{ $fechaCompra }}</p>
         </div>
 
         <div class="invoice-details">
-            <table style="width: 100%; border-collapse: collapse;">
+            <table>
                 <thead>
                     <tr>
                         <th>Producto</th>
@@ -159,27 +138,29 @@
                     </tr>
                 </thead>
                 <tbody>
-                    <tr>
-                        <td>Producto A</td>
-                        <td>2</td>
-                        <td>₡3,000</td>
-                        <td>₡6,000</td>
-                    </tr>
-                    <tr>
-                        <td>Producto B</td>
-                        <td>1</td>
-                        <td>₡5,000</td>
-                        <td>₡5,000</td>
-                    </tr>
-                    <tr>
-                        <td>Producto C</td>
-                        <td>3</td>
-                        <td>₡1,500</td>
-                        <td>₡4,500</td>
+                    @foreach ($carrito->productos as $producto)
+                        <tr>
+                            <td>{{ $producto->nombre }}</td>
+                            <td>{{ $producto->pivot->cantidad }}</td>
+                            <td>₡{{ number_format($producto->precio, 2) }}</td>
+                            <td>₡{{ number_format($producto->pivot->cantidad * $producto->precio, 2) }}</td>
+                        </tr>
+                    @endforeach
+                    <tr class="total-row">
+                        <td colspan="3" style="text-align: right;">Subtotal:</td>
+                        <td>₡{{ number_format($total, 2) }}</td>
                     </tr>
                     <tr class="total-row">
-                        <td colspan="3" style="text-align: right;">Total Compra:</td>
-                        <td>₡15,500</td>
+                        <td colspan="3" style="text-align: right;">Impuestos (13%):</td>
+                        <td>₡{{ number_format($impuesto, 2) }}</td>
+                    </tr>
+                    <tr class="total-row">
+                        <td colspan="3" style="text-align: right;">Envío:</td>
+                        <td>₡{{ number_format($envio, 2) }}</td>
+                    </tr>
+                    <tr class="total-row">
+                        <td colspan="3" style="text-align: right;">Total con impuestos:</td>
+                        <td>₡{{ number_format($totalConImpuesto, 2) }}</td>
                     </tr>
                 </tbody>
             </table>
