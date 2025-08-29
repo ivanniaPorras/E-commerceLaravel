@@ -40,7 +40,7 @@
                             <label for="nombre" class="block text-sm font-medium text-gray-700">Nombre del Producto *</label>
                             <input type="text" name="nombre" id="nombre" required
                                    class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
-                                   value="{{ old('nombre') }}" placeholder="Ej: Laptop HP Pavilion">
+                                   value="{{ old('nombre') }}" placeholder="Ej: Macadamia">
                             @error('nombre')
                                 <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
                             @enderror

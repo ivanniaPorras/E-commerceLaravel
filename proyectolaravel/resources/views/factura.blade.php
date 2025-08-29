@@ -115,6 +115,24 @@
         .export-button:hover {
             background-color: #45a049;
         }
+
+        .home-button {
+            display: block;
+            margin: 15px auto 0;
+            padding: 12px 20px;
+            background-color: #2196F3;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            text-decoration: none;
+            text-align: center;
+        }
+
+        .home-button:hover {
+            background-color: #1976D2;
+        }
     </style>
 </head>
 <body>
@@ -179,6 +197,7 @@
         </div>
 
         <button class="export-button" onclick="generatePDF()">Exportar a PDF</button>
+        <a href="{{ route('home') }}" class="home-button">Volver al Inicio</a>
     </div>
 
 </body>
