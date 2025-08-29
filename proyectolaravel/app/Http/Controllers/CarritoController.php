@@ -12,12 +12,25 @@ class CarritoController extends Controller
     // Mostrar el carrito
     public function index()
     {
+        // Verificar si el usuario está autenticado
+        if (!Auth::check()) {
+            return redirect()->route('login'); 
+        }
+
         // Obtener el carrito del usuario
-        $carrito = Carrito::with('productos')->where('user_id', Auth::id())->first(); // Usar Auth::id()
+        $carrito = Carrito::with('productos')->where('user_id', Auth::id())->first();
+
+        // Si no existe el carrito, crearlo
+        if (!$carrito) {
+            $carrito = Carrito::create(['user_id' => Auth::id()]);
+        }
+
+        // Si el carrito no tiene productos, asignar un array vacío
+        $productos = $carrito->productos ?? collect();
 
         // Calcular el total del carrito
         $total = 0;
-        foreach ($carrito->productos as $item) {
+        foreach ($productos as $item) {
             $total += $item->pivot->cantidad * $item->precio;
         }
 
@@ -35,11 +48,16 @@ class CarritoController extends Controller
     // Agregar un producto al carrito
     public function agregar($id)
     {
+        // Verificar si el usuario está autenticado
+        if (!Auth::check()) {
+            return redirect()->route('login'); 
+        }
+
         // Buscar el producto en la base de datos
         $producto = Producto::findOrFail($id);
 
         // Obtener el carrito del usuario
-        $carrito = Carrito::where('user_id', Auth::id())->first(); // Usar Auth::id()
+        $carrito = Carrito::where('user_id', Auth::id())->first();
 
         // Si el carrito no existe, crearlo
         if (!$carrito) {
@@ -55,15 +73,18 @@ class CarritoController extends Controller
             $carrito->productos()->attach($id, ['cantidad' => 1]);
         }
 
-        // Redirigir al carrito
         return redirect()->route('carrito.index');
     }
 
     // Eliminar un producto del carrito
     public function eliminar($id)
     {
-        // Obtener el carrito del usuario
-        $carrito = Carrito::where('user_id', Auth::id())->first(); // Usar Auth::id()
+        // Verificar si el usuario está autenticado
+        if (!Auth::check()) {
+            return redirect()->route('login');
+        }
+
+        $carrito = Carrito::where('user_id', Auth::id())->first();
 
         // Si el carrito existe, eliminar el producto
         if ($carrito) {
@@ -77,25 +98,27 @@ class CarritoController extends Controller
     // Actualizar la cantidad de un producto en el carrito
     public function actualizar(Request $request)
     {
-        // Obtener el carrito del usuario
-        $carrito = Carrito::where('user_id', Auth::id())->first(); // Usar Auth::id()
+        // Verificar si el usuario está autenticado
+        if (!Auth::check()) {
+            return redirect()->route('login'); 
+        }
+
+        $carrito = Carrito::where('user_id', Auth::id())->first();
 
         // Si el carrito existe, actualizar las cantidades de los productos
         if ($carrito) {
             foreach ($request->cantidad as $id => $cantidad) {
-                // Asegurarse de que el producto esté en el carrito antes de actualizarlo
                 if ($carrito->productos()->where('producto_id', $id)->exists()) {
                     $carrito->productos()->updateExistingPivot($id, ['cantidad' => $cantidad]);
                 }
             }
         }
-
-        // Redirigir al carrito
         return redirect()->route('carrito.index');
     }
 
+    // Checkout (pago)
     public function checkout()
     {
-        return view('checkout'); // Asegúrate de tener un archivo 'checkout.blade.php'
+        return view('checkout'); 
     }
 }
