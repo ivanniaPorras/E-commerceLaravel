@@ -9,7 +9,7 @@ class Producto extends Model
 {
     use HasFactory;
 
-    protected $fillable = ['nombre', 'descripcion', 'precio', 'imagen_url'];
+    protected $fillable = ['nombre', 'descripcion', 'precio', 'imagen_url', 'categoria', 'stock'];
 
     // Relación con los detalles del carrito
     public function detallesCarrito()

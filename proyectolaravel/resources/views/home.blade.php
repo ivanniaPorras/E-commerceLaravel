@@ -7,8 +7,16 @@
         <a href="{{ route('carrito.index') }}" class="btn btn-success position-absolute top-0 end-0 mt-3 me-3" title="Ver Carrito">
             <i class="bi bi-cart" style="font-size: 1.3rem;"></i>
         </a>
-        <h2 class="display-4 fw-bold text-dark">100% Vegetales Orgánicos</h2>
-        <p class="text-muted mb-4">La Mejor Manera de Llenar tu Billetera.</p>
+        
+        @auth
+            @if(auth()->user()->is_admin)
+                <a href="{{ route('admin.dashboard') }}" class="btn btn-primary position-absolute top-0 start-0 mt-3 ms-3" title="Panel de Administración">
+                    <i class="bi bi-shield-fill-check me-2"></i>Panel Admin
+                </a>
+            @endif
+        @endauth
+        <h2 class="display-4 fw-bold text-dark">100% Productos Orgánicos</h2>
+        <p class="text-muted mb-4">La Mejor Manera de Cuidar tu Billetera y tu Salud.</p>
         <p class="text-muted mb-5">Inicia tu Día con Ingredientes Frescos.</p>
 
         <div class="mb-4">
