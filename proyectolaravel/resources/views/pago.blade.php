@@ -92,6 +92,18 @@
 
     <div class="payment-container">
         <h2>Formulario de Pago</h2>
+        
+        @if(session('success'))
+            <div style="background-color: #d4edda; color: #155724; padding: 10px; border-radius: 4px; margin-bottom: 20px; text-align: center;">
+                {{ session('success') }}
+            </div>
+        @endif
+
+        <div style="background-color: #f8f9fa; padding: 15px; border-radius: 4px; margin-bottom: 20px;">
+            <h3 style="margin: 0 0 10px 0; color: #495057;">Resumen de la Compra</h3>
+            <p style="margin: 5px 0;"><strong>Total a Pagar:</strong> ₡{{ number_format($checkoutTotal ?? 0, 2) }}</p>
+            <p style="margin: 5px 0;"><strong>Productos:</strong> {{ count($checkoutCarrito ?? []) }} artículos</p>
+        </div>
 
         <form id="payment-form" onsubmit="return validarFormulario(event)">
             <!-- Numero de la tarjeta-->
@@ -167,8 +179,41 @@
                 return false;
             }
 
-            // Si todos los campos son válidos, redirigir a la página de la factura
-            window.location.href = "{{ url('factura') }}";
+            // Si todos los campos son válidos, confirmar el pago
+            confirmarPago();
+        }
+
+        // Función para confirmar el pago
+        function confirmarPago() {
+            // Mostrar indicador de carga
+            document.getElementById('submit').textContent = 'Procesando...';
+            document.getElementById('submit').disabled = true;
+
+            // Hacer la petición AJAX para confirmar el pago
+            fetch('{{ route("pago.confirmar") }}', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': '{{ csrf_token() }}'
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    // Redirigir a la factura
+                    window.location.href = data.redirect;
+                } else {
+                    alert('Error al confirmar el pago: ' + data.error);
+                    document.getElementById('submit').textContent = 'Pagar';
+                    document.getElementById('submit').disabled = false;
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('Error al procesar el pago. Inténtalo de nuevo.');
+                document.getElementById('submit').textContent = 'Pagar';
+                document.getElementById('submit').disabled = false;
+            });
         }
     </script>
 

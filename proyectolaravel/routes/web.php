@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\ProfileController;
 use Illuminate\Support\Facades\Route;
+use Illuminate\Support\Facades\Storage;
 use App\Http\Controllers\CarritoController;
 use App\Http\Controllers\ProductoController;
 use App\Http\Controllers\HomeController;
@@ -13,6 +14,7 @@ Route::get('/pago', function () {
     return view('profile.pago');
 })->name('pago');
 Route::get('/pago', [App\Http\Controllers\PagoController::class, 'index'])->name('pago.index');
+Route::post('/pago/confirmar', [App\Http\Controllers\PagoController::class, 'confirmPayment'])->name('pago.confirmar');
 
 Route::get('/factura', function () {
     return view('profile.factura');
@@ -151,7 +153,7 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
         if ($request->hasFile('imagen')) {
             // Eliminar imagen anterior si existe
             if ($producto->imagen_url) {
-                \Storage::disk('public')->delete($producto->imagen_url);
+                Storage::disk('public')->delete($producto->imagen_url);
             }
             $path = $request->file('imagen')->store('productos', 'public');
             $producto->imagen_url = $path;
@@ -164,7 +166,7 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
     // Eliminar producto
     Route::delete('/products/{producto}', function (\App\Models\Producto $producto) {
         if ($producto->imagen_url) {
-            \Storage::disk('public')->delete($producto->imagen_url);
+            Storage::disk('public')->delete($producto->imagen_url);
         }
         $producto->delete();
         return redirect()->route('admin.products')->with('success', 'Producto eliminado correctamente');

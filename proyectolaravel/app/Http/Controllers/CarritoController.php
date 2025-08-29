@@ -41,6 +41,18 @@ class CarritoController extends Controller
         // Calcular el total con impuestos y envío
         $totalConImpuesto = $total + $impuesto + $envio;
 
+        // Guardar también en sesión para que funcione con el checkout
+        $carritoSesion = [];
+        foreach ($productos as $item) {
+            $carritoSesion[$item->id] = [
+                'nombre' => $item->nombre,
+                'precio' => $item->precio,
+                'cantidad' => $item->pivot->cantidad,
+                'imagen_url' => $item->imagen_url
+            ];
+        }
+        session(['carrito' => $carritoSesion]);
+
         // Retornar la vista 'carrito' con los datos
         return view('carrito', compact('carrito', 'total', 'impuesto', 'envio', 'totalConImpuesto'));
     }
