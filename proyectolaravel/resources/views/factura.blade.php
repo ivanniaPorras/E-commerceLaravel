@@ -123,8 +123,11 @@
         <h2>Factura de Compra</h2>
         <div class="invoice-header">
             <h3>Compra Confirmada</h3>
-            <p><strong>ID de Compra:</strong> {{ $orderId }}</p>
+            <p><strong>Número de Factura:</strong> {{ $facturaId }}</p>
+            <p><strong>Pedido #:</strong> {{ $pedido->id }}</p>
             <p><strong>Fecha de Compra:</strong> {{ $fechaCompra }}</p>
+            <p><strong>Cliente:</strong> {{ $pedido->user->name ?? 'N/A' }}</p>
+            <p><strong>Email:</strong> {{ $pedido->user->email ?? 'N/A' }}</p>
         </div>
 
         <div class="invoice-details">
@@ -138,17 +141,17 @@
                     </tr>
                 </thead>
                 <tbody>
-                    @foreach ($carrito->productos as $producto)
+                    @foreach ($pedido->detalles as $detalle)
                         <tr>
-                            <td>{{ $producto->nombre }}</td>
-                            <td>{{ $producto->pivot->cantidad }}</td>
-                            <td>₡{{ number_format($producto->precio, 2) }}</td>
-                            <td>₡{{ number_format($producto->pivot->cantidad * $producto->precio, 2) }}</td>
+                            <td>{{ $detalle->producto->nombre ?? 'N/A' }}</td>
+                            <td>{{ $detalle->cantidad }}</td>
+                            <td>₡{{ number_format($detalle->precio_unitario, 2) }}</td>
+                            <td>₡{{ number_format($detalle->subtotal, 2) }}</td>
                         </tr>
                     @endforeach
                     <tr class="total-row">
                         <td colspan="3" style="text-align: right;">Subtotal:</td>
-                        <td>₡{{ number_format($total, 2) }}</td>
+                        <td>₡{{ number_format($subtotal, 2) }}</td>
                     </tr>
                     <tr class="total-row">
                         <td colspan="3" style="text-align: right;">Impuestos (13%):</td>
@@ -157,10 +160,10 @@
                     <tr class="total-row">
                         <td colspan="3" style="text-align: right;">Envío:</td>
                         <td>₡{{ number_format($envio, 2) }}</td>
-                    </tr>
+                    </td>
                     <tr class="total-row">
-                        <td colspan="3" style="text-align: right;">Total con impuestos:</td>
-                        <td>₡{{ number_format($totalConImpuesto, 2) }}</td>
+                        <td colspan="3" style="text-align: right;">Total Final:</td>
+                        <td>₡{{ number_format($total, 2) }}</td>
                     </tr>
                 </tbody>
             </table>

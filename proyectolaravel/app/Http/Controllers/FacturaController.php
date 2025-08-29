@@ -2,7 +2,8 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Carrito;  // Importar el modelo Carrito
+use App\Models\Pedido;
+use App\Models\DetallePedido;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
@@ -10,35 +11,46 @@ class FacturaController extends Controller
 {
     public function index()
     {
-        // Obtener el carrito de compras del usuario autenticado
-        $carrito = Carrito::with('productos')->where('user_id', Auth::id())->first(); // Usar Auth::id()
+        // Obtener el ID del pedido desde la sesión
+        $pedidoId = session('pedido_id');
         
-        if (!$carrito) {
-            return redirect()->route('carrito.index')->with('error', 'No hay productos en tu carrito.');
+        if (!$pedidoId) {
+            return redirect()->route('carrito.index')->with('error', 'No hay pedido para mostrar en la factura.');
         }
 
-        // Calcular el total de la compra (sin impuestos ni envío)
-        $total = 0;
-        foreach ($carrito->productos as $item) {
-            $total += $item->pivot->cantidad * $item->precio;
+        // Obtener el pedido con sus detalles y productos
+        $pedido = Pedido::with(['detalles.producto', 'user'])->find($pedidoId);
+        
+        if (!$pedido) {
+            return redirect()->route('carrito.index')->with('error', 'Pedido no encontrado.');
         }
-        
-        // Calcular impuestos (13%)
-        $impuesto = $total * 0.13;
 
-        // Costo fijo de envío (puedes ajustar este valor según tu lógica)
-        $envio = 5000; // Costo fijo de envío
-        
-        // Calcular el total con impuestos y envío
-        $totalConImpuesto = $total + $impuesto + $envio;
+        // Verificar que el pedido pertenezca al usuario autenticado
+        if ($pedido->user_id !== Auth::id()) {
+            abort(403, 'No tienes permiso para ver esta factura.');
+        }
 
-        // Generar un ID único para la compra
-        $orderId = 'ORD-' . time() . '-' . rand(1000, 9999);
+        // Calcular totales
+        $subtotal = $pedido->detalles->sum('subtotal');
+        $impuesto = $subtotal * 0.13;
+        $envio = 5000;
+        $total = $pedido->total;
+
+        // Generar un ID único para la factura
+        $facturaId = 'FAC-' . $pedido->id . '-' . time();
 
         // Fecha de compra
-        $fechaCompra = now()->format('d M Y');
+        $fechaCompra = $pedido->fecha_pedido->format('d M Y');
 
         // Pasar los datos a la vista
-        return view('factura', compact('carrito', 'total', 'impuesto', 'envio', 'totalConImpuesto', 'orderId', 'fechaCompra'));
+        return view('factura', compact(
+            'pedido', 
+            'subtotal', 
+            'impuesto', 
+            'envio', 
+            'total', 
+            'facturaId', 
+            'fechaCompra'
+        ));
     }
 }

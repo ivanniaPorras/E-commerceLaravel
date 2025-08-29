@@ -6,10 +6,46 @@
         <h2 class="display-5 fw-bold text-center mb-4" style="color:#388e3c;">Proceso de Compra</h2>
         
         <div class="row justify-content-center">
-            <div class="col-md-7">
+            <div class="col-md-8">
                 <div class="card shadow-sm border-0" style="background-color: #fff;">
                     <div class="card-body p-4">
                         
+                        <!-- Resumen de la compra -->
+                        <div class="mb-4 p-3" style="background-color: #f8f9fa; border-radius: 8px;">
+                            <h5 class="text-success mb-3">Resumen de tu Compra</h5>
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <p class="mb-2"><strong>Productos en carrito:</strong></p>
+                                    @foreach($carrito as $productoId => $item)
+                                        <div class="d-flex justify-content-between mb-1">
+                                            <span>{{ $item['nombre'] }} x{{ $item['cantidad'] }}</span>
+                                            <span>₡{{ number_format($item['precio'] * $item['cantidad'], 2) }}</span>
+                                        </div>
+                                    @endforeach
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="border-top pt-2">
+                                        <div class="d-flex justify-content-between mb-1">
+                                            <span>Subtotal:</span>
+                                            <span>₡{{ number_format($subtotal, 2) }}</span>
+                                        </div>
+                                        <div class="d-flex justify-content-between mb-1">
+                                            <span>Impuestos (13%):</span>
+                                            <span>₡{{ number_format($impuesto, 2) }}</span>
+                                        </div>
+                                        <div class="d-flex justify-content-between mb-1">
+                                            <span>Envío:</span>
+                                            <span>₡{{ number_format($envio, 2) }}</span>
+                                        </div>
+                                        <div class="d-flex justify-content-between fw-bold text-success">
+                                            <span>Total:</span>
+                                            <span>₡{{ number_format($total, 2) }}</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
                         <p class="mb-4 text-muted text-center">Completa los campos con tu información para finalizar la compra</p>
 
                         <!-- Formulario de pago -->
