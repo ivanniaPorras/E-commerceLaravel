@@ -2,26 +2,34 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Carrito;  // Importar el modelo Carrito
 use Illuminate\Http\Request;
-use Session;
-use PDF; // Asegúrate de tener instalada la librería de PDF
+use Illuminate\Support\Facades\Auth;
 
 class FacturaController extends Controller
 {
     public function index()
     {
-        // Obtener los datos del carrito de compras desde la sesión
-        $carrito = Session::get('carrito', []);
+        // Obtener el carrito de compras del usuario autenticado
+        $carrito = Carrito::with('productos')->where('user_id', Auth::id())->first(); // Usar Auth::id()
         
-        // Calcular los totales
-        $total = 0;
-        foreach ($carrito as $item) {
-            $total += $item['precio'] * $item['cantidad'];
+        if (!$carrito) {
+            return redirect()->route('carrito.index')->with('error', 'No hay productos en tu carrito.');
         }
 
-        // Calcular impuestos y envío
-        $impuesto = $total * 0.13; // 13% de impuesto
+        // Calcular el total de la compra (sin impuestos ni envío)
+        $total = 0;
+        foreach ($carrito->productos as $item) {
+            $total += $item->pivot->cantidad * $item->precio;
+        }
+        
+        // Calcular impuestos (13%)
+        $impuesto = $total * 0.13;
+
+        // Costo fijo de envío (puedes ajustar este valor según tu lógica)
         $envio = 5000; // Costo fijo de envío
+        
+        // Calcular el total con impuestos y envío
         $totalConImpuesto = $total + $impuesto + $envio;
 
         // Generar un ID único para la compra
@@ -32,34 +40,5 @@ class FacturaController extends Controller
 
         // Pasar los datos a la vista
         return view('factura', compact('carrito', 'total', 'impuesto', 'envio', 'totalConImpuesto', 'orderId', 'fechaCompra'));
-    }
-
-    public function generatePDF(Request $request)
-    {
-        // Obtener los datos del carrito de compras desde la sesión
-        $carrito = Session::get('carrito', []);
-        
-        // Calcular los totales
-        $total = 0;
-        foreach ($carrito as $item) {
-            $total += $item['precio'] * $item['cantidad'];
-        }
-
-        // Calcular impuestos y envío
-        $impuesto = $total * 0.13; // 13% de impuesto
-        $envio = 5000; // Costo fijo de envío
-        $totalConImpuesto = $total + $impuesto + $envio;
-
-        // Generar un ID único para la compra
-        $orderId = 'ORD-' . time() . '-' . rand(1000, 9999);
-
-        // Fecha de compra
-        $fechaCompra = now()->format('d M Y');
-
-        // Usar la librería de PDF (puedes usar dompdf o cualquier otra librería compatible con Laravel)
-        $pdf = PDF::loadView('factura', compact('carrito', 'total', 'impuesto', 'envio', 'totalConImpuesto', 'orderId', 'fechaCompra'));
-        
-        // Generar y descargar el PDF
-        return $pdf->download('factura_' . $orderId . '.pdf');
     }
 }
