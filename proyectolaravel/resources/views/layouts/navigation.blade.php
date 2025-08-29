@@ -34,6 +34,13 @@
                         </x-slot>
 
                         <x-slot name="content">
+                            @if(auth()->user()->is_admin)
+                                <x-dropdown-link :href="route('admin.dashboard')" class="text-indigo-600 hover:text-indigo-800">
+                                    <i class="bi bi-shield-fill-check mr-2"></i>{{ __('Panel Admin') }}
+                                </x-dropdown-link>
+                                <div class="border-t border-gray-100"></div>
+                            @endif
+                            
                             <x-dropdown-link :href="route('profile.edit')">
                                 {{ __('Profile') }}
                             </x-dropdown-link>
@@ -83,6 +90,12 @@
                 </div>
 
                 <div class="mt-3 space-y-1">
+                    @if(auth()->user()->is_admin)
+                        <x-responsive-nav-link :href="route('admin.dashboard')" class="text-indigo-600 hover:text-indigo-800">
+                            <i class="bi bi-shield-fill-check mr-2"></i>{{ __('Panel Admin') }}
+                        </x-responsive-nav-link>
+                    @endif
+                    
                     <x-responsive-nav-link :href="route('profile.edit')">
                         {{ __('Profile') }}
                     </x-responsive-nav-link>

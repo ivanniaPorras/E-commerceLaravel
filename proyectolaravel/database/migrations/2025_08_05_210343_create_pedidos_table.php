@@ -10,11 +10,10 @@ class CreatePedidosTable extends Migration
     {
         Schema::create('pedidos', function (Blueprint $table) {
             $table->id();
-            $table->string('nombre_cliente');
-            $table->string('correo');
-            $table->text('direccion');
-            $table->decimal('total', 8, 2);
-            $table->timestamp('fecha')->useCurrent();
+            $table->foreignId('user_id')->constrained()->onDelete('cascade');
+            $table->decimal('total', 10, 2);
+            $table->enum('estado', ['pendiente', 'procesando', 'enviado', 'entregado', 'cancelado'])->default('pendiente');
+            $table->timestamp('fecha_pedido')->useCurrent();
             $table->timestamps();
         });
     }
