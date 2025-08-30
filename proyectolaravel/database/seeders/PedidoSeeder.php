@@ -12,9 +12,7 @@ use Carbon\Carbon;
 
 class PedidoSeeder extends Seeder
 {
-    /**
-     * Run the database seeds.
-     */
+    
     public function run(): void
     {
         $users = User::all();

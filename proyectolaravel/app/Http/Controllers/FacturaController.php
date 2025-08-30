@@ -6,6 +6,7 @@ use App\Models\Pedido;
 use App\Models\DetallePedido;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use App\Models\Carrito; 
 
 class FacturaController extends Controller
 {
@@ -52,5 +53,16 @@ class FacturaController extends Controller
             'facturaId', 
             'fechaCompra'
         ));
+    }
+
+    // Método privado para limpiar el carrito después de mostrar la factura
+    private function limpiarCarritoDespuesDeFactura()
+    {
+        $carrito = Carrito::where('user_id', Auth::id())->first();
+        
+        if ($carrito) {
+            $carrito->productos()->detach();
+            session()->forget(['carrito']);
+        }
     }
 }

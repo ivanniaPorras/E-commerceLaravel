@@ -96,6 +96,14 @@
             <a href="{{ route('checkout') }}" class="btn btn-success btn-lg px-5" style="background-color:#4caf50; border:none;">
                 <i class="bi bi-bag-check"></i> Proceder a la compra
             </a>
+            
+            <!-- Botón para limpiar carrito -->
+            <a href="{{ route('carrito.limpiar') }}" 
+               class="btn btn-warning btn-lg px-4 ms-3"
+               onclick="return confirm('¿Estás seguro de que quieres limpiar el carrito?')"
+               style="background-color:#ff9800; border:none;">
+                🗑️ Limpiar Carrito
+            </a>
         </div>
         @endif
     </div>

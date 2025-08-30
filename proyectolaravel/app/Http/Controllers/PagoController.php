@@ -8,8 +8,8 @@ use Illuminate\Support\Facades\DB;
 use App\Models\Pedido;
 use App\Models\DetallePedido;
 use App\Models\Producto;
-use Stripe\Stripe;
-use Stripe\PaymentIntent;  
+use App\Models\Carrito;
+
 
 class PagoController extends Controller
 {
@@ -28,25 +28,16 @@ class PagoController extends Controller
 
     public function createPaymentIntent(Request $request)
     {
-        // Configurar Stripe
-        Stripe::setApiKey(env('STRIPE_SECRET'));
-
-        // Obtener el total del checkout desde la sesión
+        // Simular creación de PaymentIntent 
         $checkoutTotal = session('checkout_total', 0);
         
-        // Convertir a centavos para Stripe (asumiendo que el total está en colones)
-        $amountInCents = (int)($checkoutTotal * 100);
-
-        // Crear PaymentIntent
-        $paymentIntent = PaymentIntent::create([  
-            'amount' => $amountInCents,  
-            'currency' => 'crc',  // Cambiar a colones costarricenses
-            'metadata' => [
-                'user_id' => Auth::id(),
-            ],
+        // Generar un ID ficticio de transacción
+        $fakeTransactionId = 'TXN_' . time() . '_' . rand(1000, 9999);
+        
+        return response()->json([
+            'clientSecret' => $fakeTransactionId,
+            'message' => 'PaymentIntent simulado exitosamente'
         ]);
-
-        return response()->json(['clientSecret' => $paymentIntent->client_secret]);
     }
 
     public function confirmPayment(Request $request)
@@ -66,7 +57,7 @@ class PagoController extends Controller
             $pedido = Pedido::create([
                 'user_id' => Auth::id(),
                 'total' => $checkoutTotal,
-                'estado' => 'pagado', // Estado válido después del pago
+                'estado' => 'pagado',
                 'fecha_pedido' => now(),
             ]);
 
@@ -93,6 +84,9 @@ class PagoController extends Controller
             session(['pedido_id' => $pedido->id]);
             session(['pedido_total' => $checkoutTotal]);
 
+            // LIMPIAR EL CARRITO DE LA BASE DE DATOS
+            $this->limpiarCarrito();
+
             // Limpiar datos de checkout
             session()->forget(['checkout_subtotal', 'checkout_impuesto', 'checkout_envio', 'checkout_total', 'checkout_carrito']);
 
@@ -102,6 +96,20 @@ class PagoController extends Controller
         } catch (\Exception $e) {
             DB::rollback();
             return response()->json(['error' => 'Error al confirmar el pago: ' . $e->getMessage()], 500);
+        }
+    }
+
+    // Método privado para limpiar el carrito
+    private function limpiarCarrito()
+    {
+        $carrito = Carrito::where('user_id', Auth::id())->first();
+        
+        if ($carrito) {
+            // Eliminar todos los productos del carrito
+            $carrito->productos()->detach();
+            
+            // También limpiar la sesión del carrito
+            session()->forget(['carrito']);
         }
     }
 }

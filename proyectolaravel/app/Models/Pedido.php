@@ -27,7 +27,7 @@ class Pedido extends Model
         return $this->belongsTo(User::class);
     }
 
-    // Relación con los detalles del pedido (si los hay)
+    // Relación con los detalles del pedido
     public function detalles()
     {
         return $this->hasMany(DetallePedido::class);

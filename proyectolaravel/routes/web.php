@@ -34,6 +34,7 @@ Route::post('/carrito/agregar/{producto}', [CarritoController::class, 'agregar']
 Route::get('/carrito', [CarritoController::class, 'index'])->name('carrito.index');
 Route::get('/carrito/eliminar/{id}', [CarritoController::class, 'eliminar'])->name('carrito.eliminar');
 Route::post('/carrito/actualizar', [CarritoController::class, 'actualizar'])->name('carrito.actualizar');
+Route::get('/carrito/limpiar', [CarritoController::class, 'limpiar'])->name('carrito.limpiar');
 Route::get('/', [ProductoController::class, 'index']);
 //Route::get('/checkout', [CarritoController::class, 'checkout'])->name('checkout');
 Route::get('/home', fn() => view('home'))->name('home');
