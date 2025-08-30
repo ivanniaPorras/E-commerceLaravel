@@ -11,14 +11,14 @@ return new class extends Migration
      */
     public function up(): void
     {
-        // SQLite no soporta ALTER TABLE para ENUM, necesitamos recrear la tabla
+        
         Schema::table('pedidos', function (Blueprint $table) {
-            // Primero eliminamos la columna estado
+            
             $table->dropColumn('estado');
         });
 
         Schema::table('pedidos', function (Blueprint $table) {
-            // Agregamos la columna estado con el nuevo valor 'pagado'
+            
             $table->enum('estado', ['pendiente', 'procesando', 'enviado', 'entregado', 'cancelado', 'pagado'])->default('pendiente');
         });
     }

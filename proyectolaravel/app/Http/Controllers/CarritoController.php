@@ -133,4 +133,25 @@ class CarritoController extends Controller
     {
         return view('checkout'); 
     }
+
+    // Limpiar completamente el carrito
+    public function limpiar()
+    {
+        // Verificar si el usuario está autenticado
+        if (!Auth::check()) {
+            return redirect()->route('login');
+        }
+
+        $carrito = Carrito::where('user_id', Auth::id())->first();
+
+        // Si el carrito existe, eliminar todos los productos
+        if ($carrito) {
+            $carrito->productos()->detach(); // Elimina todos los productos del carrito
+        }
+
+        // También limpiar la sesión del carrito
+        session()->forget(['carrito', 'checkout_carrito', 'checkout_total', 'checkout_subtotal', 'checkout_impuesto', 'checkout_envio']);
+
+        return redirect()->route('carrito.index')->with('success', 'Carrito limpiado correctamente');
+    }
 }
