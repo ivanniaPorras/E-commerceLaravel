@@ -9,79 +9,94 @@ use App\Models\Pedido;
 use App\Models\DetallePedido;
 use App\Models\Producto;
 use Stripe\Stripe;
-use Stripe\PaymentIntent;  
+use Stripe\PaymentIntent;
 
 class PagoController extends Controller
 {
+    /**
+     * Muestra la pantalla de pago si existen datos de checkout en sesión
+     */
     public function index()
     {
-        // Verificar que haya datos de checkout en sesión
-        $checkoutTotal = session('checkout_total');
-        $checkoutCarrito = session('checkout_carrito');
-        
-        if (!$checkoutTotal || !$checkoutCarrito) {
-            return redirect()->route('carrito.index')->with('error', 'No hay datos de checkout. Regresa al carrito.');
+        $total = session('checkout_total');
+        $carrito = session('checkout_carrito');
+
+        if (!$total || !$carrito) {
+            return redirect()
+                ->route('carrito.index')
+                ->with('error', 'No hay datos de checkout, regresa al carrito.');
         }
 
-        return view('pago', compact('checkoutTotal', 'checkoutCarrito'));
+        return view('pago', [
+            'checkoutTotal'   => $total,
+            'checkoutCarrito' => $carrito,
+        ]);
     }
 
+    /**
+     * Crea el PaymentIntent en Stripe
+     */
     public function createPaymentIntent(Request $request)
     {
-        // Configurar Stripe
+        // Configurar Stripe con la llave secreta
         Stripe::setApiKey(env('STRIPE_SECRET'));
 
-        // Obtener el total del checkout desde la sesión
-        $checkoutTotal = session('checkout_total', 0);
-        
-        // Convertir a centavos para Stripe (asumiendo que el total está en colones)
-        $amountInCents = (int)($checkoutTotal * 100);
+        // El total se obtiene de la sesión
+        $total = session('checkout_total', 0);
 
-        // Crear PaymentIntent
-        $paymentIntent = PaymentIntent::create([  
-            'amount' => $amountInCents,  
-            'currency' => 'crc',  // Cambiar a colones costarricenses
+        // Stripe trabaja en centavos
+        $montoCentavos = intval($total * 100);
+
+        $paymentIntent = PaymentIntent::create([
+            'amount'   => $montoCentavos,
+            'currency' => 'crc',
             'metadata' => [
                 'user_id' => Auth::id(),
             ],
         ]);
 
-        return response()->json(['clientSecret' => $paymentIntent->client_secret]);
+        return response()->json([
+            'clientSecret' => $paymentIntent->client_secret
+        ]);
     }
 
+    /**
+     * Confirma el pago y genera el pedido en la base de datos
+     */
     public function confirmPayment(Request $request)
     {
-        try {
-            // Verificar que haya datos de checkout en sesión
-            $checkoutTotal = session('checkout_total');
-            $checkoutCarrito = session('checkout_carrito');
-            
-            if (!$checkoutTotal || !$checkoutCarrito) {
-                return response()->json(['error' => 'No hay datos de checkout'], 400);
-            }
+        $total   = session('checkout_total');
+        $carrito = session('checkout_carrito');
 
-            // Crear el pedido en la base de datos
+        if (!$total || !$carrito) {
+            return response()->json([
+                'error' => 'No hay datos de checkout'
+            ], 400);
+        }
+
+        try {
             DB::beginTransaction();
-            
+
+            // Guardar el pedido principal
             $pedido = Pedido::create([
-                'user_id' => Auth::id(),
-                'total' => $checkoutTotal,
-                'estado' => 'pagado', // Estado válido después del pago
+                'user_id'      => Auth::id(),
+                'total'        => $total,
+                'estado'       => 'pagado',
                 'fecha_pedido' => now(),
             ]);
 
-            // Crear los detalles del pedido
-            foreach ($checkoutCarrito as $productoId => $item) {
+            // Registrar los productos asociados
+            foreach ($carrito as $idProducto => $item) {
                 DetallePedido::create([
-                    'pedido_id' => $pedido->id,
-                    'producto_id' => $productoId,
-                    'cantidad' => $item['cantidad'],
-                    'precio_unitario' => $item['precio'],
-                    'subtotal' => $item['precio'] * $item['cantidad'],
+                    'pedido_id'      => $pedido->id,
+                    'producto_id'    => $idProducto,
+                    'cantidad'       => $item['cantidad'],
+                    'precio_unitario'=> $item['precio'],
+                    'subtotal'       => $item['cantidad'] * $item['precio'],
                 ]);
 
-                // Actualizar stock del producto
-                $producto = Producto::find($productoId);
+                // Descontar stock
+                $producto = Producto::find($idProducto);
                 if ($producto) {
                     $producto->decrement('stock', $item['cantidad']);
                 }
@@ -89,19 +104,31 @@ class PagoController extends Controller
 
             DB::commit();
 
-            // Guardar el ID del pedido en la sesión para la factura
-            session(['pedido_id' => $pedido->id]);
-            session(['pedido_total' => $checkoutTotal]);
+            // Guardar datos para factura
+            session([
+                'pedido_id'    => $pedido->id,
+                'pedido_total' => $total,
+            ]);
 
-            // Limpiar datos de checkout
-            session()->forget(['checkout_subtotal', 'checkout_impuesto', 'checkout_envio', 'checkout_total', 'checkout_carrito']);
+            // Limpiar sesión de checkout
+            session()->forget([
+                'checkout_subtotal',
+                'checkout_impuesto',
+                'checkout_envio',
+                'checkout_total',
+                'checkout_carrito'
+            ]);
 
-            // Redirigir a la factura
-            return response()->json(['success' => true, 'redirect' => route('factura.index')]);
+            return response()->json([
+                'success'  => true,
+                'redirect' => route('factura.index')
+            ]);
+        } catch (\Throwable $e) {
+            DB::rollBack();
 
-        } catch (\Exception $e) {
-            DB::rollback();
-            return response()->json(['error' => 'Error al confirmar el pago: ' . $e->getMessage()], 500);
+            return response()->json([
+                'error' => 'Error al confirmar el pago: ' . $e->getMessage()
+            ], 500);
         }
     }
 }
