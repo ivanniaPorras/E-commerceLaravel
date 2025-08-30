@@ -2,114 +2,129 @@
 
 namespace App\Http\Controllers;
 
-use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\DB;
 use App\Models\Pedido;
 use App\Models\DetallePedido;
 use App\Models\Producto;
-use App\Models\Carrito;
-
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 
 class PagoController extends Controller
 {
+    /**
+     * Muestra la pantalla de pago si existen datos de checkout en sesión.
+     */
     public function index()
     {
-        // Verificar que haya datos de checkout en sesión
-        $checkoutTotal = session('checkout_total');
+        $checkoutTotal   = session('checkout_total');
         $checkoutCarrito = session('checkout_carrito');
-        
+
         if (!$checkoutTotal || !$checkoutCarrito) {
-            return redirect()->route('carrito.index')->with('error', 'No hay datos de checkout. Regresa al carrito.');
+            return redirect()
+                ->route('carrito.index')
+                ->with('error', 'No hay datos de checkout. Regresa al carrito.');
         }
 
-        return view('pago', compact('checkoutTotal', 'checkoutCarrito'));
-    }
-
-    public function createPaymentIntent(Request $request)
-    {
-        // Simular creación de PaymentIntent 
-        $checkoutTotal = session('checkout_total', 0);
-        
-        // Generar un ID ficticio de transacción
-        $fakeTransactionId = 'TXN_' . time() . '_' . rand(1000, 9999);
-        
-        return response()->json([
-            'clientSecret' => $fakeTransactionId,
-            'message' => 'PaymentIntent simulado exitosamente'
+        return view('pago', [
+            'checkoutTotal'   => $checkoutTotal,
+            'checkoutCarrito' => $checkoutCarrito,
         ]);
     }
 
+    /**
+     * Simula la creación de un intento de pago (sin pasarela real).
+     * Devuelve un "clientSecret" ficticio para no romper el frontend.
+     */
+    public function createPaymentIntent(Request $request)
+    {
+        $checkoutTotal = session('checkout_total', 0);
+
+        if ($checkoutTotal <= 0) {
+            return response()->json([
+                'error' => 'Monto inválido o no hay datos de checkout.'
+            ], 400);
+        }
+
+        $fakeClientSecret = 'dummy_secret_' . uniqid();
+
+        return response()->json([
+            'clientSecret' => $fakeClientSecret
+        ]);
+    }
+
+    /**
+     * Confirma el pago (simulado) y genera el pedido en la base de datos.
+     */
     public function confirmPayment(Request $request)
     {
-        try {
-            // Verificar que haya datos de checkout en sesión
-            $checkoutTotal = session('checkout_total');
-            $checkoutCarrito = session('checkout_carrito');
-            
-            if (!$checkoutTotal || !$checkoutCarrito) {
-                return response()->json(['error' => 'No hay datos de checkout'], 400);
-            }
+        $total   = session('checkout_total');
+        $carrito = session('checkout_carrito');
 
-            // Crear el pedido en la base de datos
+        if (!$total || !is_array($carrito) || empty($carrito)) {
+            return response()->json([
+                'error' => 'No hay datos de checkout'
+            ], 400);
+        }
+
+        try {
             DB::beginTransaction();
-            
+
+            // Crear el pedido principal (estado en minúsculas para cumplir el CHECK).
             $pedido = Pedido::create([
-                'user_id' => Auth::id(),
-                'total' => $checkoutTotal,
-                'estado' => 'pagado',
+                'user_id'      => Auth::id(),
+                'total'        => $total,
+                'estado'       => 'pagado',   // <- importante para SQLite CHECK
                 'fecha_pedido' => now(),
             ]);
 
-            // Crear los detalles del pedido
-            foreach ($checkoutCarrito as $productoId => $item) {
+            // Registrar cada ítem del carrito como detalle del pedido.
+            foreach ($carrito as $idProducto => $item) {
+                $cantidad = isset($item['cantidad']) ? (int)$item['cantidad'] : 1;
+                $precio   = isset($item['precio'])   ? (float)$item['precio']   : 0.0;
+
                 DetallePedido::create([
-                    'pedido_id' => $pedido->id,
-                    'producto_id' => $productoId,
-                    'cantidad' => $item['cantidad'],
-                    'precio_unitario' => $item['precio'],
-                    'subtotal' => $item['precio'] * $item['cantidad'],
+                    'pedido_id'       => $pedido->id,
+                    'producto_id'     => (int)$idProducto,
+                    'cantidad'        => $cantidad,
+                    'precio_unitario' => $precio,
+                    'subtotal'        => $cantidad * $precio,
                 ]);
 
-                // Actualizar stock del producto
-                $producto = Producto::find($productoId);
-                if ($producto) {
-                    $producto->decrement('stock', $item['cantidad']);
+                // Actualizar stock
+                if ($cantidad > 0) {
+                    $producto = Producto::find((int)$idProducto);
+                    if ($producto) {
+                        $producto->decrement('stock', $cantidad);
+                    }
                 }
             }
 
             DB::commit();
 
-            // Guardar el ID del pedido en la sesión para la factura
-            session(['pedido_id' => $pedido->id]);
-            session(['pedido_total' => $checkoutTotal]);
+            // Guardar datos para la factura.
+            session([
+                'pedido_id'    => $pedido->id,
+                'pedido_total' => $total,
+            ]);
 
-            // LIMPIAR EL CARRITO DE LA BASE DE DATOS
-            $this->limpiarCarrito();
+            // Limpiar datos de checkout.
+            session()->forget([
+                'checkout_subtotal',
+                'checkout_impuesto',
+                'checkout_envio',
+                'checkout_total',
+                'checkout_carrito',
+            ]);
 
-            // Limpiar datos de checkout
-            session()->forget(['checkout_subtotal', 'checkout_impuesto', 'checkout_envio', 'checkout_total', 'checkout_carrito']);
-
-            // Redirigir a la factura
-            return response()->json(['success' => true, 'redirect' => route('factura.index')]);
-
-        } catch (\Exception $e) {
-            DB::rollback();
-            return response()->json(['error' => 'Error al confirmar el pago: ' . $e->getMessage()], 500);
-        }
-    }
-
-    // Método privado para limpiar el carrito
-    private function limpiarCarrito()
-    {
-        $carrito = Carrito::where('user_id', Auth::id())->first();
-        
-        if ($carrito) {
-            // Eliminar todos los productos del carrito
-            $carrito->productos()->detach();
-            
-            // También limpiar la sesión del carrito
-            session()->forget(['carrito']);
+            return response()->json([
+                'success'  => true,
+                'redirect' => route('factura.index'),
+            ]);
+        } catch (\Throwable $e) {
+            DB::rollBack();
+            return response()->json([
+                'error' => 'Error al confirmar el pago: ' . $e->getMessage()
+            ], 500);
         }
     }
 }
